@@ -370,8 +370,23 @@ def get_gmail_service():
 @app.route("/")
 def read_root():
     app.logger.info("Root route '/' accessed.")
-    return flask.render_template("index.html")
+    user_info = flask.session.get("user_info")
+    is_authorized = False
+    username = None
 
+    if user_info and user_info.get("isAuthorized"):
+        is_authorized = True
+        # Prefer 'name' or 'given_name' for display if available, fallback to email
+        username = user_info.get("name", user_info.get("given_name", user_info.get("email")))
+        app.logger.debug(f"User {username} is authorized.")
+    else:
+        app.logger.debug("User is not authorized.")
+        
+    return flask.render_template(
+        "index.html",
+        isAuthorized=is_authorized,
+        username=username
+    )
 @app.get("/login")
 def authorize():
     app.logger.info("Login route '/login' accessed. Initiating OAuth flow.")

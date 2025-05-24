@@ -1,25 +1,81 @@
 <!doctype html>
 <html lang="en">
-
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="color-scheme" content="light dark">
-  <!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2.0.6/css/pico.min.css" /> -->
-
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.2/css/bulma.min.css">
+  <meta name="color-scheme" content="light dark" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css" />
   <title>Emailer</title>
+  <style> 
+    body {
+      margin: 0;
+      display: flex; 
+      flex-direction: column;
+      min-height: 100%;
+    }
+    .main-view-wrapper {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;   
+    }
+    main.container {
+      max-width: 600px;
+      text-align: center;
+      width: 100%;
+    }
+    .google-btn {
+      margin-top: 1rem;
+    }
+
+    article {
+      padding: 4rem 2rem;
+    }
+   
+    .page-footer {
+      background-color: var(--card-background-color, var(--pico-card-background-color, #f8f9fa));
+      border-top: 1px solid var(--card-border-color, var(--pico-card-border-color, #dee2e6));
+      padding: 1rem;
+      text-align: center;
+      width: 100%;
+    }
+    .page-footer p {
+      margin: 0;
+      font-size: 0.875rem;
+      color: var(--muted-color, var(--pico-muted-color, #6c757d));
+    }
+    .page-footer span {
+        margin: 0 0.5em;
+    }
+  </style>
+
 </head>
-
 <body>
-  <main class="container">
-    <h1 class="title">Emailer</h1>
-    {% if isAuthorized %}
-    Hola, {username}
-    {% else %}
-    Hola! Para continuar, <a href="http://localhost:8000/login">accede con Google</a>.
-    {% endif %}
-  </main>
-</body>
+  <div class="main-view-wrapper">
+    <main class="container">
+    <article>
+      <hgroup>
+        <h1>Emailer</h1>
+        <h2>Send bulk emails with ease</h2>
+      </hgroup>
 
+      {% if isAuthorized %}
+        <p>Hola, <strong>{{ username }}</strong>!</p>
+        <a href="{{ url_for('compose') }}" role="button">Nuevo Email</a>
+      {% else %}
+        <a href="{{ url_for('authorize') }}" role="button" class="contrast google-btn">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align: middle; margin-right: 8px;"><g clip-path="url(#clip0_105_2)"><path d="M17.6402 9.20455C17.6402 8.56818 17.582 7.95909 17.4766 7.38636H9V10.8364H13.8438C13.6366 11.9864 13.0002 12.9727 11.9456 13.6636V15.8182H14.4558C16.406 14.0182 17.6402 11.8182 17.6402 9.20455Z" fill="#4285F4"/><path d="M9.00001 18C11.432 18 13.4674 17.1955 14.4558 15.8182L11.9456 13.6636C11.1365 14.2136 10.1502 14.5455 9.00001 14.5455C6.86381 14.5455 5.05472 13.0818 4.36835 11.1364H1.76819V13.3591C2.76153 15.3182 5.66381 18 9.00001 18Z" fill="#34A853"/><path d="M4.36839 11.1364C4.17744 10.5682 4.07299 9.97273 4.07299 9.36364C4.07299 8.75455 4.17744 8.15909 4.36383 7.59091V5.36818H1.76822C0.945624 6.95909 0.500009 8.15909 0.500009 9.36364C0.500009 10.5682 0.945624 11.7682 1.76822 13.3591L4.36839 11.1364Z" fill="#FBBC05"/><path d="M9.00001 4.18182C10.2274 4.18182 11.2138 4.60455 11.9865 5.34091L14.5065 2.89545C13.4638 1.92273 11.432 0.727273 9.00001 0.727273C5.66381 0.727273 2.76153 3.40909 1.76819 5.36818L4.36383 7.59091C5.05472 5.63636 6.86381 4.18182 9.00001 4.18182Z" fill="#EA4335"/></g><defs><clipPath id="clip0_105_2"><rect width="17.5" height="17.5" fill="white" transform="translate(0.5 0.5)"/></clipPath></defs></svg>
+          Continua con Google
+        </a>
+      {% endif %}
+
+    </article>
+  </main>
+  </div>
+  <footer class="page-footer" id="pageFooter">
+    <p>Emailer <span>•</span> Marco Crivaro Nicolini</p>
+  </footer>
+</body>
 </html>
+
