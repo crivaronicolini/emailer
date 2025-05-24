@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2.0.6/css/pico.min.css" /> -->
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.2/css/bulma.min.css">
+  <title>Emailer</title>
+</head>
+
+<body>
+  <main class="container">
+    <h1 class="title">Emailer</h1>
+    {% if isAuthorized %}
+    Hola, {username}
+    {% else %}
+    Hola! Para continuar, <a href="http://localhost:8000/login">accede con Google</a>.
+    {% endif %}
+  </main>
+</body>
+
+</html>

@@ -1,0 +1,482 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=0.6">
+  <meta name="color-scheme" content="light dark">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2.0.6/css/pico.min.css" />
+  <title>Emailer</title>
+</head>
+
+<body>
+  <!-- <nav> -->
+  <!--   <ul style="margin-left:3em"> -->
+  <!--     <li><strong>Emailer</strong></li> -->
+  <!--   </ul> -->
+  <!--   <ul style="margin-right:3em"> -->
+  <!--     <li><a href="#">About</a></li> -->
+  <!--     <li><a href="#">Services</a></li> -->
+  <!--     <li><a href="#">Products</a></li> -->
+  <!--   </ul> -->
+  <!-- </nav> -->
+  <main class="container">
+    <h1 class="title">Nuevo email</h1>
+
+    De <span class="email-card">{{ user.given_name }} ({{user.email}})</span> <a
+      href="http://localhost:8000/">Cambiar</a>
+    <p style="margin-bottom:1rem;"></p>
+
+    <form method="post" enctype="multipart/form-data" id="emailForm">
+      <fieldset>
+        <div class="recipients-wrapper">
+          <label class="recipients-label" for="recipientsContainer">Para</label>
+          <div class="recipients-container" id="recipientsContainer">
+            <div class="input-container">
+              <input type="text" class="recipients-input" id="emailInput" placeholder="">
+            </div>
+          </div>
+          <input type="hidden" name="recipientsList" id="recipientsList">
+        </div>
+
+        <details>
+          <summary>
+            Cc Cco
+          </summary>
+          <label>
+            <input name="Cc" placeholder="Cc" />
+          </label>
+          <label>
+            <input name="Cco" placeholder="Cco" />
+          </label>
+        </details>
+        <p style="margin-bottom:1cm;"></p>
+
+        <label>
+          <input name="subject" id="subject" placeholder="Asunto" required />
+        </label>
+
+        <div class="file-drop-textarea">
+          <textarea name="body" placeholder="" aria-label="Enter text here..." rows="11"
+            required></textarea>
+          <input name="file" type="file" id="fileInput" multiple="multiple">
+          <div class="drop-message">Deja los archivos aquí</div>
+        </div>
+        <ul class="file-list" id="fileList"></ul>
+
+        <div class="sign-preview">
+          <label for="signatureInput">Incluir firma</label>
+          <input type="file" id="signatureInput" name="signature" accept=".jpg, .jpeg, .png" />
+        </div>
+
+        <div class="preview" id="signaturePreview>"</div>
+      </fieldset>
+
+      <input type="submit" value="Enviar" />
+    </form>
+
+
+  </main>
+</body>
+
+<style>
+  title {
+    display: inline-flex;
+  }
+
+  .email-card {
+    padding: 0.2ex 2ex;
+  }
+
+  .recipients-container {
+    border: var(--pico-border-width) solid var(--pico-form-element-border-color);
+    border-radius: var(--pico-border-radius);
+    padding: 0 var(--pico-form-element-spacing-horizontal);
+    background-color: var(--pico-form-element-background-color);
+    transition: border-color var(--pico-transition);
+    margin: 0;
+    margin-top: 0.5rem;
+    width: 100%;
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+
+  .recipients-container:focus-within {
+    border: var(--pico-border-width) solid var(--pico-form-element-active-border-color);
+    border-radius: var(--pico-border-radius);
+  }
+
+  .input-container {
+    flex-grow: 1;
+  }
+
+  input.recipients-input {
+    width: 100%;
+    border: none !important;
+    margin: 0 !important;
+    padding: 0;
+    min-width: 10rem;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  input.recipients-input:focus {
+    box-shadow: none !important;
+    border: none !important;
+  }
+
+  .recipients-wrapper {
+    display: block;
+    margin-bottom: 1rem;
+  }
+
+  label.recipients-label {
+    margin-bottom: 0.0rem;
+  }
+
+  .email-chip {
+    background-color: var(--pico-secondary-background);
+    border-radius: 16px;
+    padding: 0.2rem 0.5rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.9rem;
+    margin: 0.2rem;
+    margin-top: 0.6rem;
+    margin-right: 0.3rem;
+    margin-left: 0;
+    flex-shrink: 0;
+  }
+
+  .email-text {
+    max-width: 20em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .remove-chip {
+    cursor: pointer;
+    font-weight: bold;
+    margin-left: 5px;
+    margin-righy: 5px;
+  }
+
+  /*drag and drop*/
+
+  .file-drop-textarea {
+    position: relative;
+    resize: vertical;
+    min-height: 150px;
+    width: 100%;
+  }
+
+  .file-drop-textarea input[type="file"] {
+    display: none;
+    position: absolute;
+    inset: 0;
+  }
+
+  .drop-message {
+    position: absolute;
+    inset: 0;
+    justify-content: center;
+    align-items: center;
+    pointer-events: none;
+    display: none;
+    background-color: rgba(255, 255, 255, 0.3);
+    z-index: 10;
+    border: 4px dashed var(--pico-primary);
+    border-radius: 4px;
+    font-size: 2.5em;
+  }
+
+  .drop-message.dragging {
+    display: flex;
+  }
+
+  .file-list {
+    margin: 0;
+    padding: 0 1em;
+  }
+
+  .file-list li {
+    list-style: none;
+    margin-bottom: 0.5rem;
+  }
+
+  .sign-preview ol {
+    padding-left: 0;
+  }
+
+  .sign-preview li {
+    background: #eee;
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    list-style-type: none;
+    border: 1px solid black;
+  }
+
+  .preview li {
+    list-style: none;
+  }
+  
+  .remove-file {
+    cursor: pointer;
+    font-weight: bold;
+    margin-left: 5px;
+    margin-righy: 5px;
+  }
+
+</style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const asuntoInput = document.getElementById("subject");
+    asuntoInput.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+      }
+
+    });
+
+    const container = document.getElementById('recipientsContainer');
+    const input = document.getElementById('emailInput');
+    const recipientsList = document.getElementById('recipientsList');
+
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    input.addEventListener('focusout', function (e) {
+      const email = input.value.trim();
+      if (email && emailPattern.test(email)) {
+        createEmailChip(email);
+        input.value = '';
+      }
+    });
+
+    input.addEventListener('keydown', function (e) {
+      if (e.key === ' ' || e.key === 'Enter' || e.key === ',') {
+        e.preventDefault();
+
+        const email = input.value.trim();
+        if (email && emailPattern.test(email)) {
+          createEmailChip(email);
+          input.value = '';
+        }
+      } else if (e.key === 'Backspace' && input.value === '') {
+        const chips = container.querySelectorAll('.email-chip');
+        if (chips.length > 0) {
+          const lastChip = chips[chips.length - 1];
+          const emailText = lastChip.querySelector('.email-text').textContent;
+          lastChip.remove();
+          input.value = emailText;
+
+          removeEmailFromList(emailText);
+
+          setTimeout(() => {
+            input.selectionStart = input.selectionEnd = input.value.length;
+          }, 0);
+        }
+      }
+    });
+
+    container.addEventListener('click', function (e) {
+      if (!e.target.closest('.email-chip')) {
+        input.focus();
+      }
+    });
+
+    function createEmailChip(email) {
+      const chip = document.createElement('div');
+      chip.className = 'email-chip';
+
+      const emailText = document.createElement('span');
+      emailText.className = 'email-text';
+      emailText.textContent = email;
+
+      const removeBtn = document.createElement('span');
+      removeBtn.className = 'remove-chip';
+      removeBtn.textContent = '×';
+      removeBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        chip.remove();
+
+        removeEmailFromList(email);
+      });
+
+      chip.appendChild(emailText);
+      chip.appendChild(removeBtn);
+
+      chip.addEventListener('click', function (e) {
+        if (e.target !== removeBtn) {
+          const emailValue = emailText.textContent;
+          chip.remove();
+          input.value = emailValue;
+          input.focus();
+
+          removeEmailFromList(emailValue);
+        }
+      });
+
+      // Insert the chip BEFORE the input wrapper.
+      container.insertBefore(chip, container.querySelector(".input-container"));
+
+      addEmailToList(email);
+    }
+
+    function addEmailToList(email) {
+      if (recipientsList.value) {
+        recipientsList.value += ',' + email;
+      } else {
+        recipientsList.value = email;
+      }
+    }
+
+    function removeEmailFromList(email) {
+      let emails = recipientsList.value.split(',');
+      emails = emails.filter(e => e !== email);
+      recipientsList.value = emails.join(',');
+    }
+
+    // drag and drop and signature input
+    let allFiles = [];
+
+    const dropMessage = document.querySelector('.drop-message');
+    const fileInput = document.getElementById('fileInput');
+    const fileList = document.getElementById('fileList');
+
+    function updateFileList() {
+      fileList.innerHTML = ''; // Clear previous list
+      allFiles.forEach((file, index) => {
+        const listItem = document.createElement('li');
+        console.log(file);
+        // listItem.textContent = file.name;
+        listItem.innerHTML = `
+          ${file.name} 
+          <span class="remove-file" data-index="${index}">×</span>
+        `;
+        fileList.appendChild(listItem);
+      });
+    }
+
+    function updateFileInput() {
+      // Create new DataTransfer to update the file input
+      const dt = new DataTransfer();
+      allFiles.forEach(file => dt.items.add(file));
+      fileInput.files = dt.files;
+    }
+
+    // Handle file input change
+    fileInput.addEventListener('change', function(e) {
+      // Add new files to our array (don't replace existing ones)
+      const newFiles = Array.from(e.target.files);
+      allFiles = [...allFiles, ...newFiles];
+      updateFileList();
+      updateFileInput();
+    });
+
+    window.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropMessage.classList.add('dragging');
+    });
+
+    window.addEventListener('dragleave', (e) => {
+      if (e.clientX === 0 && e.clientY === 0) {
+        dropMessage.classList.remove('dragging');
+      }
+    });
+
+    window.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropMessage.classList.remove('dragging');
+
+      const droppedFiles = Array.from(e.dataTransfer.files);
+      console.log(droppedFiles);
+      allFiles = [...allFiles, ...droppedFiles];
+      updateFileList();
+      updateFileInput();
+    });
+
+    fileList.addEventListener('click', function(e) {
+      if (e.target.classList.contains('remove-file')) {
+        const index = parseInt(e.target.dataset.index);
+        allFiles.splice(index, 1);
+        updateFileList();
+        updateFileInput();
+      }
+    });
+
+    // window.addEventListener('change', () => {
+    //   handleFiles(fileInput.files);
+    // });
+
+
+    // firma (de mdn input type file)
+    const inputSign = document.getElementById("signatureInput");
+    const preview = document.querySelector(".preview");
+
+    // inputSign.style.opacity = 0;
+    inputSign.addEventListener("change", updateImageDisplay);
+
+    function updateImageDisplay() {
+      while (preview.firstChild) {
+        preview.removeChild(preview.firstChild);
+      }
+
+      const curFiles = inputSign.files;
+      if (curFiles.length === 0) {
+        const para = document.createElement("p");
+        para.textContent = "No files currently selected for upload";
+        preview.appendChild(para);
+      } else {
+        const list = document.createElement("ol");
+        preview.appendChild(list);
+
+        for (const file of curFiles) {
+          const listItem = document.createElement("li");
+          if (validFileType(file)) {
+            const image = document.createElement("img");
+            image.src = URL.createObjectURL(file);
+            image.alt = image.title = file.name;
+            image.style.maxWidth = "200px";
+            image.style.height = "auto";
+            listItem.appendChild(image);
+          } else {
+            const para = document.createElement("p");
+            para.textContent = `File name ${file.name}: Not a valid file type. Update your selection.`;
+            listItem.appendChild(para);
+          }
+          list.appendChild(listItem);
+        }
+      }
+    }
+    // https://developer.mozilla.org/en-US/docs/Web/Media/Guides/Formats/Image_types
+    const fileTypes = [
+      "image/apng",
+      "image/bmp",
+      "image/gif",
+      "image/jpeg",
+      "image/pjpeg",
+      "image/png",
+      "image/svg+xml",
+      "image/tiff",
+      "image/webp",
+      "image/x-icon",
+    ];
+
+    function validFileType(file) {
+      return fileTypes.includes(file.type);
+    }
+
+    document.getElementById('emailForm').addEventListener('submit', function(e) {
+      console.log('Submitting files:', fileInput.files.length, 'attachments and', inputSign.files.length, 'signatures');
+    });
+
+  });
+</script>
+
+</html>
