@@ -80,9 +80,10 @@ else:
 app.logger.info(f"Using REDIRECT_URI: {REDIRECT_URI}")
 
 SCOPES = [
-    "https://www.googleapis.com/auth/gmail.send",
+    "openid",
     "https://www.googleapis.com/auth/userinfo.email",
     "https://www.googleapis.com/auth/userinfo.profile",
+    "https://www.googleapis.com/auth/gmail.send",
 ]
 
 class EmailService:
