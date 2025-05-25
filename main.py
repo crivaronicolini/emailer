@@ -23,24 +23,70 @@ import flask
 from flask import flash, request, redirect, jsonify, current_app
 from werkzeug.utils import secure_filename
 
+IS_PRODUCTION = os.environ.get("RENDER") == "true"
 CLIENT_SECRETS_FILE = ".client_secret.json"
+
+app = flask.Flask(__name__)
+
+if not app.secret_key and IS_PRODUCTION:
+    app.logger.critical("FATAL: FLASK_SECRET_KEY is not set in production!")
+    import sys
+    sys.exit()
+elif not app.secret_key:
+    app.logger.warning("FLASK_SECRET_KEY not set, using default for development. THIS IS INSECURE FOR PRODUCTION.")
+    app.secret_key = "jero-aurora"
+
+# --- Logging Configuration ---
+app.debug = os.environ.get("FLASK_DEBUG", "False").lower() == "true"
+
+if not app.debug: 
+    app.logger.setLevel(logging.INFO)
+else:
+    app.logger.setLevel(logging.DEBUG)
+
+app.logger.info(f"Flask app initialized. Production: {IS_PRODUCTION}, Debug: {app.debug}")
+
+
+# Client secret configuration
+if IS_PRODUCTION:
+    client_secret_json_str = os.environ.get("GOOGLE_CLIENT_SECRET_JSON")
+    if client_secret_json_str:
+        try:
+            json.loads(client_secret_json_str)
+            with open(CLIENT_SECRETS_FILE, "w") as f:
+                f.write(client_secret_json_str)
+            app.logger.info(f"Successfully loaded {CLIENT_SECRETS_FILE} from environment variable.")
+        except Exception as e:
+            app.logger.critical(f"FATAL: Could not write {CLIENT_SECRETS_FILE} from env var: {e}")
+            import sys
+            sys.exit()
+    else:
+        app.logger.critical(f"FATAL: GOOGLE_CLIENT_SECRET_JSON environment variable not set in production.")
+elif not os.path.exists(CLIENT_SECRETS_FILE):
+    app.logger.warning(f"{CLIENT_SECRETS_FILE} not found for local development.")
+
+# OAuth Redirect URI and Insecure Transport
+if IS_PRODUCTION:
+    render_url = os.environ.get("RENDER_EXTERNAL_URL")
+    if not render_url:
+        app.logger.warning("RENDER_EXTERNAL_URL not found in production environment! Using Fallback")
+        REDIRECT_URI = "https://your-app.onrender.com/login/callback" # A hardcoded fallback if desperate
+    else:
+        REDIRECT_URI = f"{render_url}/login/callback"
+    if "OAUTHLIB_INSECURE_TRANSPORT" in os.environ:
+        del os.environ["OAUTHLIB_INSECURE_TRANSPORT"]
+else:
+    REDIRECT_URI = "http://localhost:8000/login/callback"
+    os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
+    os.environ["OAUTHLIB_RELAX_TOKEN_SCOPE"] = "1"
+
+app.logger.info(f"Using REDIRECT_URI: {REDIRECT_URI}")
+
 SCOPES = [
     "https://www.googleapis.com/auth/gmail.send",
     "https://www.googleapis.com/auth/userinfo.email",
     "https://www.googleapis.com/auth/userinfo.profile",
 ]
-REDIRECT_URI = "http://localhost:8000/login/callback"
-
-app = flask.Flask(__name__)
-app.secret_key = "your-secret-key-here"  # Change this in production
-
-# --- Logging Configuration ---
-# if not app.debug: 
-#     app.logger.setLevel(logging.INFO)
-# else:
-app.logger.setLevel(logging.DEBUG)
-# --- End Logging Configuration ---
-
 
 class EmailService:
     def __init__(self, service, logger):
@@ -582,15 +628,8 @@ def compose():
             return jsonify({"status": "error", "message": f"An unexpected server error occurred: {str(e)}"}), 500
 
 if __name__ == "__main__":
-    app.logger.info("Starting Flask development server.")
-    os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1" 
-    os.environ["OAUTHLIB_RELAX_TOKEN_SCOPE"] = "1" 
-    
-    if not os.path.exists(CLIENT_SECRETS_FILE):
-        crit_msg = f"CRITICAL ERROR: {CLIENT_SECRETS_FILE} not found. Application will not work."
-        app.logger.critical(crit_msg)
-        print(crit_msg) # Also print to console for immediate visibility
+    if not IS_PRODUCTION:
+        app.run(host="localhost", port=8000, debug=app.debug)
+        app.logger.info("Starting Flask development server.")
     else:
-        app.logger.info(f"Using client secrets file: {CLIENT_SECRETS_FILE}")
-
-    app.run("localhost", 8000, debug=True)
+        app.logger.info("Running in production mode - Gunicorn should be managing this process.")
