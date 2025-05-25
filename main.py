@@ -28,10 +28,10 @@ CLIENT_SECRETS_FILE = ".client_secret.json"
 
 app = flask.Flask(__name__)
 
+app.secret_key = os.environ.get("FLASK_SECRET_KEY") or None
+
 if not app.secret_key and IS_PRODUCTION:
     app.logger.critical("FATAL: FLASK_SECRET_KEY is not set in production!")
-    import sys
-    sys.exit()
 elif not app.secret_key:
     app.logger.warning("FLASK_SECRET_KEY not set, using default for development. THIS IS INSECURE FOR PRODUCTION.")
     app.secret_key = "jero-aurora"
@@ -49,17 +49,10 @@ app.logger.info(f"Flask app initialized. Production: {IS_PRODUCTION}, Debug: {ap
 
 # Client secret configuration
 if IS_PRODUCTION:
-    client_secret_json_str = os.environ.get("GOOGLE_CLIENT_SECRET_JSON")
-    if client_secret_json_str:
-        try:
-            json.loads(client_secret_json_str)
-            with open(CLIENT_SECRETS_FILE, "w") as f:
-                f.write(client_secret_json_str)
-            app.logger.info(f"Successfully loaded {CLIENT_SECRETS_FILE} from environment variable.")
-        except Exception as e:
-            app.logger.critical(f"FATAL: Could not write {CLIENT_SECRETS_FILE} from env var: {e}")
-            import sys
-            sys.exit()
+    CLIENT_SECRETS_FILE = "/etc/secrets/.client_secret.json"
+    if os.path.exists(CLIENT_SECRETS_FILE):
+        client_secret_json_str = os.environ.get("GOOGLE_CLIENT_SECRET_JSON")
+        app.logger.info(f"Successfully loaded {CLIENT_SECRETS_FILE} from environment variable.")
     else:
         app.logger.critical(f"FATAL: GOOGLE_CLIENT_SECRET_JSON environment variable not set in production.")
 elif not os.path.exists(CLIENT_SECRETS_FILE):
@@ -70,7 +63,7 @@ if IS_PRODUCTION:
     render_url = os.environ.get("RENDER_EXTERNAL_URL")
     if not render_url:
         app.logger.warning("RENDER_EXTERNAL_URL not found in production environment! Using Fallback")
-        REDIRECT_URI = "https://your-app.onrender.com/login/callback" # A hardcoded fallback if desperate
+        REDIRECT_URI = "https://emailer-run.onrender.com/login/callback"
     else:
         REDIRECT_URI = f"{render_url}/login/callback"
     if "OAUTHLIB_INSECURE_TRANSPORT" in os.environ:
