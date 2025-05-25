@@ -28,15 +28,12 @@ CLIENT_SECRETS_FILE = ".client_secret.json"
 
 app = flask.Flask(__name__)
 
-app.secret_key = os.environ.get("FLASK_SECRET_KEY") or None
-
-if not app.secret_key and IS_PRODUCTION:
-    app.logger.critical("FATAL: FLASK_SECRET_KEY is not set in production!")
-elif not app.secret_key:
-    app.logger.warning("FLASK_SECRET_KEY not set, using default for development. THIS IS INSECURE FOR PRODUCTION.")
-    app.secret_key = "jero-aurora"
-
 # --- Logging Configuration ---
+if IS_PRODUCTION:
+    gunicorn_logger = logging.getLogger('gunicorn.error')
+    app.logger.handlers = gunicorn_logger.handlers
+    app.logger.setLevel(gunicorn_logger.level)
+
 app.debug = os.environ.get("FLASK_DEBUG", "False").lower() == "true"
 
 if not app.debug: 
@@ -46,6 +43,13 @@ else:
 
 app.logger.info(f"Flask app initialized. Production: {IS_PRODUCTION}, Debug: {app.debug}")
 
+app.secret_key = os.environ.get("FLASK_SECRET_KEY") or None
+
+if not app.secret_key and IS_PRODUCTION:
+    app.logger.critical("FATAL: FLASK_SECRET_KEY is not set in production!")
+elif not app.secret_key:
+    app.logger.warning("FLASK_SECRET_KEY not set, using default for development. THIS IS INSECURE FOR PRODUCTION.")
+    app.secret_key = "jero-aurora"
 
 # Client secret configuration
 if IS_PRODUCTION:
