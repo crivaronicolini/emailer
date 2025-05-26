@@ -10,16 +10,6 @@
 </head>
 
 <body>
-  <!-- <nav> -->
-  <!--   <ul style="margin-left:3em"> -->
-  <!--     <li><strong>Emailer</strong></li> -->
-  <!--   </ul> -->
-  <!--   <ul style="margin-right:3em"> -->
-  <!--     <li><a href="#">About</a></li> -->
-  <!--     <li><a href="#">Services</a></li> -->
-  <!--     <li><a href="#">Products</a></li> -->
-  <!--   </ul> -->
-  <!-- </nav> -->
   <main class="container">
     <h1 class="title">Nuevo email</h1>
 
@@ -57,8 +47,7 @@
         </label>
 
         <div class="file-drop-textarea">
-          <textarea name="body" placeholder="" aria-label="Enter text here..." rows="11"
-            required></textarea>
+          <textarea name="body" placeholder="" aria-label="Enter text here..." rows="11" required></textarea>
           <input name="file" type="file" id="fileInput" multiple="multiple">
           <div class="drop-message">Deja los archivos aquí</div>
         </div>
@@ -69,7 +58,7 @@
           <input type="file" id="signatureInput" name="signature" accept=".jpg, .jpeg, .png" />
         </div>
 
-        <div class="preview" id="signaturePreview>"</div>
+        <div class="preview" id="signaturePreview>" </div>
       </fieldset>
 
       <input type="submit" value="Enviar" />
@@ -224,14 +213,13 @@
   .preview li {
     list-style: none;
   }
-  
+
   .remove-file {
     cursor: pointer;
     font-weight: bold;
     margin-left: 5px;
     margin-righy: 5px;
   }
-
 </style>
 
 <script>
@@ -371,7 +359,7 @@
     }
 
     // Handle file input change
-    fileInput.addEventListener('change', function(e) {
+    fileInput.addEventListener('change', function (e) {
       // Add new files to our array (don't replace existing ones)
       const newFiles = Array.from(e.target.files);
       allFiles = [...allFiles, ...newFiles];
@@ -401,7 +389,7 @@
       updateFileInput();
     });
 
-    fileList.addEventListener('click', function(e) {
+    fileList.addEventListener('click', function (e) {
       if (e.target.classList.contains('remove-file')) {
         const index = parseInt(e.target.dataset.index);
         allFiles.splice(index, 1);
@@ -472,7 +460,7 @@
       return fileTypes.includes(file.type);
     }
 
-    document.getElementById('emailForm').addEventListener('submit', function(e) {
+    document.getElementById('emailForm').addEventListener('submit', function (e) {
       console.log('Submitting files:', fileInput.files.length, 'attachments and', inputSign.files.length, 'signatures');
     });
 
