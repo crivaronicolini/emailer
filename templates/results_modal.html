@@ -1,0 +1,36 @@
+<dialog id="resultsModal">
+  <article>
+    <header>
+      <p>
+      <strong>Emails enviados!</strong>
+      </p>
+    </header>
+    <p>{{ overall_message }}</p>
+    
+    {% if results %}
+      {% for result in results %}
+        <p style="margin-bottom: 1rem;">
+          {% if result.status == "success" %}
+            ✅ 
+          {% elif result.status == "error" %}
+            ❌
+          {% else %}
+            ❔
+          {% endif %}
+          {{ result.recipient }}
+          {% if result.status == "error" and result.error %}
+            <small style="display: block; color: var(--pico-color-red-550); margin-left: 2em;">
+              Error: {{ result.error | truncate(100) }} {# Show truncated error message #}
+            </small>
+          {% endif %}
+        </p>
+      {% endfor %}
+    {% else %}
+      <p>No detailed results available.</p>
+    {% endif %}
+    
+    <footer>
+      <a href="{{ url_for('compose') }}" role="button">Nuevo Email</a>
+    </footer>
+  </article>
+</dialog>

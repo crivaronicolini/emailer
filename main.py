@@ -19,7 +19,7 @@ from googleapiclient.errors import HttpError
 from google.auth.transport.requests import Request
 
 import flask
-from flask import request, jsonify, current_app
+from flask import request, current_app
 from werkzeug.utils import secure_filename
 
 IS_PRODUCTION = os.environ.get("RENDER") == "true"
@@ -109,7 +109,7 @@ class EmailService:
         body: str,
         cc: str = "",
         bcc: str = "",
-        attachments: List = None,
+        attachments: List = [],
         signature_file=None,
         sender_email: str = "",
     ):
@@ -699,14 +699,9 @@ def compose():
                 "isAuthorized"
             ):
                 logger.warning(
-                    "Attempt to send email without proper authentication/authorization."
+                    "Attempt to send email without proper authentication/authorization. Redirecting to /login."
                 )
-                return jsonify(
-                    {
-                        "status": "error",
-                        "message": "Not authenticated or authorized. Please log in.",
-                    }
-                ), 401
+                return flask.redirect("/login", code=401)
 
             user_email = flask.session["user_info"]["email"]
             logger.info(f"Email send request initiated by user: {user_email}")
@@ -714,22 +709,17 @@ def compose():
             service = get_gmail_service()
             if not service:
                 logger.error("Gmail service unavailable for sending email.")
-                return jsonify(
-                    {
-                        "status": "error",
-                        "message": "Gmail service unavailable. Please try logging in again.",
-                    }
-                ), 401
+                user = flask.session.get("user_info")
+                return flask.render_template(
+                    "error",
+                    error_code=401,
+                    detail="Gmail service unavailable. Please try logging in again.",
+                    username=user,
+                )
 
             data = request.form
             recipients_str = data.get("recipientsList", "")
             logger.debug(f"Recipients string from form: '{recipients_str}'")
-            if not recipients_str.strip():
-                logger.warning("No recipients specified in form.")
-                return jsonify(
-                    {"status": "error", "message": "No recipients specified"}
-                ), 400
-
             recipients = [r.strip() for r in recipients_str.split(",") if r.strip()]
             subject = data.get("subject", "")
             body = data.get("body", "")
@@ -800,42 +790,37 @@ def compose():
                 sender_email=user_email,
             )
 
-            successful = [r for r in results if r["status"] == "success"]
-            failed = [r for r in results if r["status"] == "error"]
+            successful_sends = sum(1 for r in results if r["status"] == "success")
+            failed_sends = len(results) - successful_sends
+            
+            overall_message = f"Enviados: {successful_sends}, Fallidos: {failed_sends}."
+            if failed_sends > 0 and successful_sends > 0:
+                 overall_message = f"Enviado a {successful_sends}/{len(results)} recipientes. Ocurrieron algunos errores.."
+            elif failed_sends == 0 and len(results) > 0:
+                 overall_message = f"Enviados exitosamente a {len(results)} recipientes."
+            elif successful_sends == 0 and failed_sends > 0:
+                 overall_message = f"Fallaron todos los{failed_sends} emails."
 
-            logger.info(
-                f"Email sending process completed. Total: {len(results)}, Successful: {len(successful)}, Failed: {len(failed)}"
+
+            logger.info(overall_message)
+            logger.debug(f"Results for modal: {results}")
+
+            # Render the partial HTML for the modal
+            return flask.render_template(
+                "results_modal.html",
+                overall_message=overall_message,
+                results=results
             )
-
-            response_data = {
-                "status": "completed",
-                "total": len(results),
-                "successful": len(successful),
-                "failed": len(failed),
-                "results": results,
-            }
-
-            if failed:
-                response_data["message"] = (
-                    f"Sent to {len(successful)}/{len(results)} recipients. Some errors occurred."
-                )
-            else:
-                response_data["message"] = (
-                    f"Successfully sent to all {len(successful)} recipients."
-                )
-
-            logger.debug(f"Sending response: {response_data}")
-            return jsonify(response_data)
 
         except Exception as e:
             logger.error(f"Error in /compose POST handler: {e}", exc_info=True)
-            return jsonify(
-                {
-                    "status": "error",
-                    "message": f"An unexpected server error occurred: {str(e)}",
-                }
-            ), 500
 
+            return flask.render_template(
+                "error",
+                error_code=500,
+                detail="Error interno.",
+                username=user,
+            )
 
 if __name__ == "__main__":
     if not IS_PRODUCTION:

@@ -63,8 +63,10 @@
     <main class="container">
       <article>
         <hgroup>
-          <h1>Emailer</h1>
-          <h2>Send bulk emails with ease</h2>
+          <h1>Tuvimos un error {{ error }}</h1>
+          <h3>{{ detail }}</h3>
+          <h2>Por favor, intenta de nuevo en unos minutos.</h2>
+          <h2>Emailer</h2>
         </hgroup>
 
         {% if isAuthorized %}

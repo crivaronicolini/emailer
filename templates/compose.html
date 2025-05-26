@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=0.6">
   <meta name="color-scheme" content="light dark">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2.0.6/css/pico.min.css" />
+  <script src="https://unpkg.com/htmx.org@2.0.4"></script>
   <title>Emailer</title>
 </head>
 
@@ -61,9 +62,15 @@
         <div class="preview" id="signaturePreview>" </div>
       </fieldset>
 
-      <input type="submit" value="Enviar" />
+      <button type="submit" id="sendButton" hx-post="{{ url_for('compose') }}" hx-target="#modal-response-area"
+        hx-swap="innerHTML" hx-indicator="#sending-indicator"
+        hx-on::before-request="this.setAttribute('aria-busy', 'true'); this.disabled = true; this.dataset.originalText = this.innerText; this.innerText = 'Enviando...';"
+        hx-on::after-request="this.setAttribute('aria-busy', 'false'); this.disabled = false; this.innerText = this.dataset.originalText; this.form.reset(); if(event.detail.successful) document.getElementById('resultsModal').showModal();">Enviar
+        emails</button>
     </form>
 
+    <div id="modal-response-area">
+    </div>
 
   </main>
 </body>
